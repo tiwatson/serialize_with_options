@@ -1,23 +1,24 @@
 module SerializeWithOptions
   def serialize_with_options(set = :default, &block)
-    @configuration ||= {}
-    @options       ||= {}
+    cattr_accessor :serialize_configuration, :serialize_options
+    self.serialize_configuration ||= {}
+    self.serialize_options       ||= {}
 
-    @configuration[set] = Config.new.instance_eval(&block)
+    self.serialize_configuration[set] = Config.new.instance_eval(&block)
 
     include InstanceMethods
   end
 
   def serialization_configuration(set)
-    conf = if @configuration
-      @configuration[set] || @configuration[:default]
+    conf = if self.serialize_configuration
+      self.serialize_configuration[set] || self.serialize_configuration[:default]
     end
 
     conf.try(:dup) || { :methods => nil, :only => nil, :except => nil }
   end
 
   def serialization_options(set)
-    @options[set] ||= returning serialization_configuration(set) do |opts|
+    self.serialize_options[set] ||= returning serialization_configuration(set) do |opts|
       includes = opts.delete(:includes)
 
       if includes
